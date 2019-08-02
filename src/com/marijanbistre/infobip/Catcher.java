@@ -1,5 +1,6 @@
 package com.marijanbistre.infobip;
 
+import javax.xml.crypto.Data;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -12,10 +13,11 @@ public class Catcher {
 
     public static void main(String[] args) throws Exception{
 
+        // port, adresa
         int port = 25000;
         String ipAddress = "localhost";
         InetAddress address = InetAddress.getByName(ipAddress);
-
+        // spajanje na socket
         ServerSocket serverSocket = new ServerSocket(port, 50, address);
         System.out.println("Server started and listening to the port 25000");
 
@@ -24,6 +26,7 @@ public class Catcher {
 
         while(true) {
             socket = serverSocket.accept();
+            // primanje poruke od pitchera
             System.out.println("Handling client at " + socket.getRemoteSocketAddress());
             Framer framer = new LengthFramer(socket.getInputStream());
             try {
@@ -32,6 +35,17 @@ public class Catcher {
                     System.out.println("Received message ("+req.length+" bytes)");
                     MsgInfo responseMsg = service.handleRequest(coder.fromWire(req));
                     framer.frameMsg(coder.toWire(responseMsg), socket.getOutputStream());
+
+                    responseMsg.insertReceivedMessages(0, (int) System.currentTimeMillis());
+
+                    // slanje poruke pitcheru - slanje rednog broja radi provjere je li stigla poruka
+                    int receivedRbr = responseMsg.getRbr();
+                    DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+                    //write object to Socket
+                    dos.write(receivedRbr);
+                    // upis trenutnog vremena radi izračuna prosjeka vremena poruke
+                    responseMsg.insertSentMessages(0, (int) System.currentTimeMillis());
+                    System.out.println("Sending received rbr: " + receivedRbr);
                 }
              } catch (IOException e) {
                 System.err.println("Error handling client: " + e.getMessage());

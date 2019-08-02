@@ -16,9 +16,9 @@ public class MsgService {
         int lastSecMsgCount;
         String time = info.getTime();
         totalMsgCount = info.getTotalMsgCount() + 1;
-//        if(info.getTime() != info.getLastSecond()) {
-//            info.setLastSecMsgCount(0);
-//        }
+        if(!info.getTime().equals(info.getLastSecond())) {
+            info.setLastSecMsgCount(0);
+        }
         lastSecMsgCount = info.getLastSecMsgCount() + 1;
 
         info.setTotalMsgCount(totalMsgCount);
